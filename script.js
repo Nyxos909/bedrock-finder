@@ -3,11 +3,14 @@ const searchBtn = document.getElementById('searchBtn');
 const rotateBtn = document.getElementById('rotateBtn');
 const clearBtn = document.getElementById('clearBtn');
 const resultDiv = document.getElementById('result');
+const imageInput = document.getElementById('imageInput');
+const canvas = document.getElementById('processCanvas');
+const ctx = canvas.getContext('2d');
 
 const gridSize = 16;
 let bedrockMatrix = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
 
-// Generate the interactive UI grid
+// Build visual board items
 function createGrid() {
     gridContainer.innerHTML = '';
     for (let r = 0; r < gridSize; r++) {
@@ -25,7 +28,40 @@ function createGrid() {
     }
 }
 
-// Java LCG random engine mapping Minecraft's native world-gen behavior
+// Automatically process uploaded image pixels
+imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const img = new Image();
+    img.onload = () => {
+        // Squish image data into a raw 16x16 sample layout
+        canvas.width = gridSize;
+        canvas.height = gridSize;
+        ctx.drawImage(img, 0, 0, gridSize, gridSize);
+        
+        const imgData = ctx.getImageData(0, 0, gridSize, gridSize).data;
+        
+        for (let r = 0; r < gridSize; r++) {
+            for (let c = 0; c < gridSize; c++) {
+                const idx = (r * gridSize + c) * 4;
+                const rVal = imgData[idx];
+                const gVal = imgData[idx + 1];
+                const bVal = imgData[idx + 2];
+                
+                // Calculate brightness value
+                const brightness = (rVal + gVal + bVal) / 3;
+                
+                // Bedrock blocks are notably darker than surrounding stone/netherrack layers
+                bedrockMatrix[r][c] = brightness < 75 ? 1 : 0;
+            }
+        }
+        createGrid();
+    };
+    img.src = URL.createObjectURL(file);
+});
+
+// Java LCG engine replicating Minecraft's layout formulas
 class MinecraftRandom {
     constructor(seed) {
         this.seed = BigInt(seed);
@@ -53,23 +89,15 @@ class MinecraftRandom {
     }
 }
 
-// Computes bedrock layouts based on chunk coordinates and type
 function isBedrockAt(worldSeed, x, z, dimension) {
     let blockSeed = BigInt(x) * 341873128712N + BigInt(z) * 132897987541N + BigInt(worldSeed);
     let rand = new MinecraftRandom(blockSeed);
     let randValue = rand.nextInt(5);
-    
-    if (dimension === "overworld_floor" || dimension === "nether_floor") {
-        return randValue === 0 ? 1 : 0; // Bedrock at specific bottom layers
-    } else if (dimension === "nether_roof") {
-        return randValue === 0 ? 1 : 0; // Mirrored generation profile
-    }
-    return 0;
+    return randValue === 0 ? 1 : 0;
 }
 
-// Scans surrounding world grid coordinates
 function searchForPattern(worldSeed, targetMatrix, dimension) {
-    const searchLimit = 3000; // Search within +/- 3000 blocks
+    const searchLimit = 4000; 
     
     for (let x = -searchLimit; x < searchLimit; x += 16) {
         for (let z = -searchLimit; z < searchLimit; z += 16) {
@@ -91,10 +119,8 @@ function searchForPattern(worldSeed, targetMatrix, dimension) {
     return null;
 }
 
-// Handle UI controls
 rotateBtn.addEventListener('click', () => {
-    // Transpose matrix for 90 degree pattern turns
-    bedrockMatrix = bedrockMatrix[0].map((val, index) => bedrockMatrix.map(row => row[index]).reverse());
+    bedrockMatrix = bedrockMatrix.map((val, index) => bedrockMatrix.map(row => row[index]).reverse());
     createGrid();
 });
 
@@ -102,6 +128,7 @@ clearBtn.addEventListener('click', () => {
     bedrockMatrix = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
     createGrid();
     resultDiv.style.display = 'none';
+    imageInput.value = "";
 });
 
 searchBtn.addEventListener('click', () => {
@@ -115,16 +142,16 @@ searchBtn.addEventListener('click', () => {
     
     resultDiv.className = 'searching';
     resultDiv.style.display = 'block';
-    resultDiv.innerText = "Scanning chunk arrays... (This may take a moment)";
+    resultDiv.innerText = "Scanning coordinate maps... (This may take a moment)";
     
     setTimeout(() => {
         const result = searchForPattern(seedInput, bedrockMatrix, dimension);
         if (result) {
             resultDiv.className = 'success';
-            resultDiv.innerHTML = `📍 Match Found!<br>Chunk Origin: X: <strong>${result.x}</strong>, Z: <strong>${result.z}</strong>`;
+            resultDiv.innerHTML = `📍 Match Found!<br>Chunk Coordinates: X: <strong>${result.x}</strong>, Z: <strong>${result.z}</strong>`;
         } else {
             resultDiv.className = 'error';
-            resultDiv.innerText = "No matching coordinates found within 3000 blocks. Try rotating or adjusting the pattern.";
+            resultDiv.innerText = "No matching coordinates found within 4000 blocks. Try rotating the grid or cleaning up misread blocks.";
         }
     }, 50);
 });
