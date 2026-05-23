@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedrock Coordinate Finder</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e24; color: #f5f5f5; text-align: center; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: #2a2a35; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        h1 { margin-top: 0; color: #4caf50; }
+        input, select, button { margin: 10px 5px; padding: 12px; background: #3a3a4a; color: #fff; border: 1px solid #555; border-radius: 6px; font-size: 16px; }
+        input:focus, select:focus { border-color: #4caf50; outline: none; }
+        button { background: #4caf50; font-weight: bold; cursor: pointer; transition: background 0.2s; border: none; }
+        button:hover { background: #45a049; }
+        #grid { display: grid; grid-template-columns: repeat(16, 25px); gap: 2px; justify-content: center; margin: 25px auto; padding: 10px; background: #111; border-radius: 8px; width: fit-content; }
+        .cell { width: 25px; height: 25px; background: #555; border-radius: 2px; cursor: pointer; transition: background 0.1s; }
+        .cell.bedrock { background: #000; box-shadow: inset 0 0 4px #fff; }
+        #result { margin-top: 25px; padding: 15px; border-radius: 6px; font-weight: bold; display: none; }
+        .success { background: #2e7d32; color: #fff; }
+        .searching { background: #1565c0; color: #fff; }
+        .error { background: #c62828; color: #fff; }
+        .controls { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bedrock Coordinate Finder</h1>
+        <p>Click squares to draw the 16x16 bedrock pattern. Ensure your orientation matches game directions.</p>
+        
+        <div class="controls">
+            <input type="text" id="seed" placeholder="Enter World Seed" required>
+            <select id="dimension">
+                <option value="overworld_floor">Overworld Floor (Y: -64 to -60)</option>
+                <option value="nether_floor">Nether Floor (Y: 0 to 4)</option>
+                <option value="nether_roof">Nether Roof (Y: 123 to 127)</option>
+            </select>
+        </div>
+        
+        <div id="grid"></div>
+        
+        <div class="controls">
+            <button id="rotateBtn">🔄 Rotate Pattern</button>
+            <button id="clearBtn">🗑️ Clear Grid</button>
+            <button id="searchBtn">🚀 Find Coordinates</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
