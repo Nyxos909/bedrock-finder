@@ -8,24 +8,48 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1e1e24; color: #f5f5f5; text-align: center; margin: 0; padding: 20px; }
         .container { max-width: 700px; margin: 0 auto; background: #2a2a35; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
         h1 { margin-top: 0; color: #4caf50; }
-        input, select, button { margin: 10px 5px; padding: 12px; background: #3a3a4a; color: #fff; border: 1px solid #555; border-radius: 6px; font-size: 16px; }
+        input, select, button { margin: 10px 5px; padding: 12px; background: #3a3a4a; color: #fff; border: 1px solid #555; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
         input:focus, select:focus { border-color: #4caf50; outline: none; }
         button { background: #4caf50; font-weight: bold; cursor: pointer; transition: background 0.2s; border: none; }
         button:hover { background: #45a049; }
-        #grid { display: grid; grid-template-columns: repeat(16, 25px); gap: 2px; justify-content: center; margin: 25px auto; padding: 10px; background: #111; border-radius: 8px; width: fit-content; }
-        .cell { width: 25px; height: 25px; background: #555; border-radius: 2px; cursor: pointer; transition: background 0.1s; }
+        
+        /* Fixed Grid Layout */
+        #grid { 
+            display: grid; 
+            grid-template-columns: repeat(16, 25px); 
+            grid-template-rows: repeat(16, 25px);
+            gap: 2px; 
+            justify-content: center; 
+            margin: 25px auto; 
+            padding: 10px; 
+            background: #111; 
+            border-radius: 8px; 
+            width: fit-content; 
+            height: fit-content;
+        }
+        .cell { 
+            width: 25px; 
+            height: 25px; 
+            background: #555; 
+            border-radius: 2px; 
+            cursor: pointer; 
+            transition: background 0.1s;
+            box-sizing: border-box;
+        }
         .cell.bedrock { background: #000; box-shadow: inset 0 0 4px #fff; }
+        
         #result { margin-top: 25px; padding: 15px; border-radius: 6px; font-weight: bold; display: none; }
         .success { background: #2e7d32; color: #fff; }
         .searching { background: #1565c0; color: #fff; }
         .error { background: #c62828; color: #fff; }
         .controls { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .hidden-canvas { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Bedrock Coordinate Finder</h1>
-        <p>Click squares to draw the 16x16 bedrock pattern. Ensure your orientation matches game directions.</p>
+        <p>Upload a top-down screenshot or click squares manually to draw the 16x16 pattern.</p>
         
         <div class="controls">
             <input type="text" id="seed" placeholder="Enter World Seed" required>
@@ -35,8 +59,16 @@
                 <option value="nether_roof">Nether Roof (Y: 123 to 127)</option>
             </select>
         </div>
+
+        <div class="controls">
+            <label style="cursor:pointer; padding:12px; background:#3a3a4a; border-radius:6px; border:1px solid #555;">
+                📸 Upload Screenshot
+                <input type="file" id="imageInput" accept="image/*" style="display:none;">
+            </label>
+        </div>
         
         <div id="grid"></div>
+        <canvas id="processCanvas" class="hidden-canvas"></canvas>
         
         <div class="controls">
             <button id="rotateBtn">🔄 Rotate Pattern</button>
